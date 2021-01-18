@@ -239,7 +239,7 @@ module.exports = {
           return bleDevice;
         });
       } else {
-        bleDevice.deviceInformation.pairing.pairAsync(DevicePairingProtectionLevel.none)
+        return bleDevice.deviceInformation.pairing.pairAsync(DevicePairingProtectionLevel.none)
         .then(function (res) {
           if (res.status === DevicePairingResultStatus.paired ||
               res.status === DevicePairingResultStatus.alreadyPaired) {
