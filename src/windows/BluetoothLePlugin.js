@@ -230,10 +230,34 @@ module.exports = {
       if (bleDevice.connectionStatus === BluetoothConnectionStatus.connected) {
         return bleDevice;
       }
-      //if we're not already connected, getting the services will cause a connection to happen
-      return bleDevice.getGattServicesAsync(WindowsBluetooth.BluetoothCacheMode.uncached).then(function(){
-        return bleDevice;
-      });
+
+      if (bleDevice.deviceInformation.name.indexOf("NIPRO CF") !== 0) {
+        //if we're not already connected, getting the services will cause a connection to happen
+        return bleDevice.getGattServicesAsync(WindowsBluetooth.BluetoothCacheMode.uncached).then(function(){
+          return bleDevice;
+        });
+      }
+
+      var DevicePairingProtectionLevel = Windows.Devices.Enumeration.DevicePairingProtectionLevel;
+      var DevicePairingResultStatus = Windows.Devices.Enumeration.DevicePairingResultStatus;
+      if (bleDevice.deviceInformation.pairing.isPaired) {
+        //if we're not already connected, getting the services will cause a connection to happen
+        return bleDevice.getGattServicesAsync(WindowsBluetooth.BluetoothCacheMode.uncached).then(function(){
+          return bleDevice;
+        });
+      } else {
+        return bleDevice.deviceInformation.pairing.pairAsync(DevicePairingProtectionLevel.none)
+        .then(function (res) {
+          if (res.status === DevicePairingResultStatus.paired ||
+              res.status === DevicePairingResultStatus.alreadyPaired) {
+            return bleDevice.getGattServicesAsync(WindowsBluetooth.BluetoothCacheMode.uncached).then(function(){
+              return bleDevice;
+            });
+          }
+
+          throw { error: "connect", message: "The device rejected the connection" };
+        });
+      }
     })
     .done(function (bleDevice) {
       var result = {
